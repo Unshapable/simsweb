@@ -30,4 +30,7 @@ pnpm-debug.log*
 
 # 操作系统文件
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# 文档
+学生信息管理系统.md
