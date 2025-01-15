@@ -12,15 +12,16 @@ export interface Course {
   capacity?: number
 }
 
+export interface ApiResponse<T> {
+  code: string
+  msg: string | null
+  result: T
+}
+
 export const courseApi = {
   // 获取所有课程
-  getAllCourse: (params: { page: number; pageSize: number; courseName?: string }) =>
-    request<{ list: Course[]; total: number }>('/api/course/getAllCourse', {
-      params: {
-        page: params.page.toString(),
-        pageSize: params.pageSize.toString(),
-        courseName: params.courseName || ''
-      },
+  getAllCourse: () =>
+    request<Course[]>('/api/course/getAllCourse', {
       headers: {
         'token': localStorage.getItem('token') || ''
       }

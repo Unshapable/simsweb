@@ -69,8 +69,25 @@ const form = ref({
 // 加载课程列表
 const loadCourses = async () => {
   try {
-    const { list } = await courseApi.getAllCourse({ page: 1, pageSize: 100 })
-    courses.value = list
+    const response = await courseApi.getAllCourse()
+    console.log('Response:', response)
+    
+    if (Array.isArray(response)) {
+      // 获取教师信息
+      const teacherMap = new Map(
+        teachers.value.map(teacher => [teacher.userNO, teacher.name])
+      )
+      
+      // 添加教师姓名到课程信息中
+      courses.value = response.map(course => ({
+        ...course,
+        teacherName: teacherMap.get(course.teacherNO) || '未知教师'
+      }))
+      console.log('Processed courses:', courses.value)
+    } else {
+      console.error('Invalid response format:', response)
+      ElMessage.error('获取课程列表失败')
+    }
   } catch (error) {
     console.error('获取课程列表失败:', error)
     ElMessage.error('获取课程列表失败')
@@ -145,9 +162,9 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => {
-  loadCourses()
-  loadTeachers()
+onMounted(async () => {
+  await loadTeachers()
+  await loadCourses()
 })
 </script>
 

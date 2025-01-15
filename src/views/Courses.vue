@@ -61,15 +61,20 @@ const courses = ref<Course[]>([])
 
 const loadCourses = async () => {
   try {
-    const { list, total: totalCount } = await courseApi.getAllCourse({
-      page: currentPage.value,
-      pageSize: pageSize.value,
-      courseName: searchQuery.value
-    })
-    courses.value = list
-    total.value = totalCount
+    const response = await courseApi.getAllCourse()
+    
+    if (Array.isArray(response)) {
+      const start = (currentPage.value - 1) * pageSize.value
+      const end = start + pageSize.value
+      courses.value = response.slice(start, end)
+      total.value = response.length
+    } else {
+      console.error('Invalid response format:', response)
+      ElMessage.error('获取课程列表失败')
+    }
   } catch (error) {
     console.error('获取课程列表失败:', error)
+    ElMessage.error('获取课程列表失败')
   }
 }
 
