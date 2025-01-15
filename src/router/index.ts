@@ -38,45 +38,45 @@ const router = createRouter({
           path: 'my-courses',
           name: 'MyCourses',
           component: () => import('../views/student/MyCourses.vue'),
-          meta: { role: 'student', title: '我的课程' }
+          meta: { role: 'STUDENT', title: '我的课程' }
         },
         {
           path: 'my-grades',
           name: 'MyGrades',
           component: () => import('../views/student/MyGrades.vue'),
-          meta: { role: 'student', title: '成绩查询' }
+          meta: { role: 'STUDENT', title: '成绩查询' }
         },
         // 教师特有的路由
         {
           path: 'teaching-courses',
           name: 'TeachingCourses',
           component: () => import('../views/teacher/TeachingCourses.vue'),
-          meta: { role: 'teacher', title: '授课管理' }
+          meta: { role: 'TEACHER', title: '授课管理' }
         },
         {
           path: 'grade-management',
           name: 'GradeManagement',
           component: () => import('../views/teacher/GradeManagement.vue'),
-          meta: { role: 'teacher', title: '成绩管理' }
+          meta: { role: 'TEACHER', title: '成绩管理' }
         },
         // 管理员特有的路由
         {
           path: 'user-management',
           name: 'UserManagement',
           component: () => import('../views/admin/UserManagement.vue'),
-          meta: { role: 'admin', title: '用户管理' }
+          meta: { role: 'ADMIN', title: '用户管理' }
         },
         {
           path: 'course-management',
           name: 'CourseManagement',
           component: () => import('../views/admin/CourseManagement.vue'),
-          meta: { role: 'admin', title: '课程管理' }
+          meta: { role: 'ADMIN', title: '课程管理' }
         },
         {
           path: 'system-log',
           name: 'SystemLog',
           component: () => import('../views/admin/SystemLog.vue'),
-          meta: { role: 'admin', title: '系统日志' }
+          meta: { role: 'ADMIN', title: '系统日志' }
         }
       ]
     },

@@ -53,6 +53,20 @@ export interface UpdateUserParams {
     address?: string
 }
 
+// 注册参数接口
+export interface RegisterParams {
+    userNO: string
+    name: string
+    password: string
+    role: UserRole
+    gender: Gender
+    major: string
+    grade?: number
+    email?: string
+    phone?: string
+    address?: string
+}
+
 export const userApi = {
     // 登录
     login: (data: LoginParams) => {
@@ -159,6 +173,56 @@ export const userApi = {
             body: formData,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+    },
+
+    // 注册
+    register: (data: RegisterParams) => {
+        const formData = new URLSearchParams()
+
+        // 添加必需字段
+        formData.append('userNO', data.userNO)
+        formData.append('name', data.name)
+        formData.append('password', data.password)
+        formData.append('role', data.role)
+        formData.append('gender', data.gender)
+        formData.append('major', data.major)
+
+        // 添加可选字段
+        if (data.grade !== undefined) {
+            formData.append('grade', data.grade.toString())
+        }
+        if (data.email) {
+            formData.append('email', data.email)
+        }
+        if (data.phone) {
+            formData.append('phone', data.phone)
+        }
+        if (data.address) {
+            formData.append('address', data.address)
+        }
+
+        return request<boolean>('/api/user/register', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+    },
+
+    // 获取所有用户
+    getAllUsers: () => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            return Promise.reject(new Error('No token found'))
+        }
+
+        return request<User[]>('/api/user/getAllUsers', {
+            method: 'GET',
+            headers: {
+                'token': token
             }
         })
     }

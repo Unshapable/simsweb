@@ -6,20 +6,10 @@
       </template>
       <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
         <el-form-item prop="userNO">
-          <el-input 
-            v-model="loginForm.userNO" 
-            placeholder="请输入学号"
-            prefix-icon="User"
-          />
+          <el-input v-model="loginForm.userNO" placeholder="请输入学号" prefix-icon="User" />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input 
-            v-model="loginForm.password" 
-            type="password" 
-            placeholder="请输入密码"
-            prefix-icon="Lock"
-            show-password
-          />
+          <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleLogin" style="width: 100%">登录</el-button>
@@ -57,7 +47,7 @@ const rules = {
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  
+
   await loginFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
@@ -93,4 +83,4 @@ const handleLogin = async () => {
 .login-card :deep(.el-card__header) {
   text-align: center;
 }
-</style> 
+</style>
