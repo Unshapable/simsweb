@@ -67,7 +67,10 @@ export const userApi = {
     register: (data: User) =>
         request<boolean>('/api/user/register', {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
         }),
 
     // 获取指定用户信息
@@ -86,7 +89,7 @@ export const userApi = {
 
     // 获取所有教师
     getAllTeachers: () =>
-        request<User[]>('/api/user/getAllTeachers',{
+        request<User[]>('/api/user/getAllTeachers', {
             headers: {
                 'token': localStorage.getItem('token') || ''
             }

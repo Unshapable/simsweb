@@ -119,10 +119,26 @@ const handleDelete = async (row: Course) => {
 // 提交表单
 const handleSubmit = async () => {
   try {
-    await courseApi.addCourse(form.value)
-    ElMessage.success(dialogTitle.value === '添加课程' ? '添加成功' : '更新成功')
+    // 表单验证
+    if (!form.value.courseName || !form.value.teacherNO) {
+      ElMessage.warning('请填写完整信息')
+      return
+    }
+
+    if (dialogTitle.value === '添加课程') {
+      // 添加课程
+      await courseApi.addCourse({
+        courseName: form.value.courseName,
+        teacherNO: form.value.teacherNO
+      })
+      ElMessage.success('添加成功')
+    } else {
+      // TODO: 实现编辑课程功能
+      ElMessage.warning('暂不支持编辑课程功能')
+    }
+    
     dialogVisible.value = false
-    loadCourses()
+    loadCourses() // 重新加载课程列表
   } catch (error) {
     console.error('操作失败:', error)
     ElMessage.error('操作失败')
