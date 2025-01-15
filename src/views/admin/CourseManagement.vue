@@ -8,9 +8,7 @@
     <el-table :data="courses" border style="width: 100%">
       <el-table-column prop="courseNO" label="课程编号" width="120" />
       <el-table-column prop="courseName" label="课程名称" />
-      <el-table-column prop="teacher" label="任课教师" width="120" />
-      <el-table-column prop="credit" label="学分" width="80" />
-      <el-table-column prop="capacity" label="容量" width="80" />
+      <el-table-column prop="teacherName" label="任课教师" width="120" />
       <el-table-column label="操作" width="200">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
@@ -25,20 +23,125 @@
 
     <!-- 添加/编辑课程对话框 -->
     <el-dialog v-model="dialogVisible" :title="dialogTitle">
-      <!-- 表单内容 -->
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="课程名称">
+          <el-input v-model="form.courseName" />
+        </el-form-item>
+        <el-form-item label="任课教师">
+          <el-select v-model="form.teacherNO" placeholder="请选择教师">
+            <el-option
+              v-for="teacher in teachers"
+              :key="teacher.userNO"
+              :label="teacher.name"
+              :value="teacher.userNO"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { courseApi, userApi } from '@/api'
 
-const courses = ref([])
+interface Course {
+  courseNO: number
+  courseName: string
+  teacherNO: string
+  teacherName?: string
+}
+
+const courses = ref<Course[]>([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('添加课程')
+const teachers = ref<any[]>([])
 
-// TODO: 实现课程管理相关功能
+const form = ref({
+  courseName: '',
+  teacherNO: ''
+})
+
+// 加载课程列表
+const loadCourses = async () => {
+  try {
+    const { list } = await courseApi.getCourses({ page: 1, pageSize: 100 })
+    courses.value = list
+  } catch (error) {
+    console.error('获取课程列表失败:', error)
+    ElMessage.error('获取课程列表失败')
+  }
+}
+
+// 加载教师列表
+const loadTeachers = async () => {
+  try {
+    const { result } = await userApi.getAllTeachers()
+    teachers.value = result
+  } catch (error) {
+    console.error('获取教师列表失败:', error)
+    ElMessage.error('获取教师列表失败')
+  }
+}
+
+// 显示添加课程对话框
+const showAddCourseDialog = () => {
+  dialogTitle.value = '添加课程'
+  form.value = {
+    courseName: '',
+    teacherNO: ''
+  }
+  dialogVisible.value = true
+}
+
+// 显示编辑课程对话框
+const handleEdit = (row: Course) => {
+  dialogTitle.value = '编辑课程'
+  form.value = {
+    courseName: row.courseName,
+    teacherNO: row.teacherNO
+  }
+  dialogVisible.value = true
+}
+
+// 处理删除课程
+const handleDelete = async (row: Course) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该课程吗？', '提示', {
+      type: 'warning'
+    })
+    // 调用删除课程接口
+    await courseApi.deleteCourse(row.courseNO)
+    ElMessage.success('删除成功')
+    loadCourses()
+  } catch (error) {
+    console.error('删除课程失败:', error)
+  }
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  try {
+    await courseApi.addCourse(form.value)
+    ElMessage.success(dialogTitle.value === '添加课程' ? '添加成功' : '更新成功')
+    dialogVisible.value = false
+    loadCourses()
+  } catch (error) {
+    console.error('操作失败:', error)
+    ElMessage.error('操作失败')
+  }
+}
+
+onMounted(() => {
+  loadCourses()
+  loadTeachers()
+})
 </script>
 
 <style scoped>
