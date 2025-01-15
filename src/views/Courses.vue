@@ -16,10 +16,8 @@
       <el-table-column prop="courseNO" label="课程编号" width="120" />
       <el-table-column prop="courseName" label="课程名称" />
       <el-table-column prop="teacher" label="任课教师" width="120" />
-      <el-table-column prop="credit" label="学分" width="80" />
-      <el-table-column prop="capacity" label="容量" width="80" />
-      <el-table-column prop="selected" label="已选" width="80" />
-      <el-table-column label="操作" width="120" v-if="userRole === 'student'">
+
+      <el-table-column label="操作" width="120" v-if="userRole === 'STUDENT'">
         <template #default="{ row }">
           <el-button 
             :type="row.isSelected ? 'danger' : 'primary'"
@@ -50,7 +48,12 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
-import { courseApi, type Course } from '@/api'
+import { courseApi, userApi, type Course } from '@/api'
+
+interface Teacher {
+  userNO: string
+  name: string
+}
 
 const userRole = ref(localStorage.getItem('userRole'))
 const searchQuery = ref('')
@@ -58,24 +61,80 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const courses = ref<Course[]>([])
+const teachers = ref<Teacher[]>([])
+const selectedCourseNOs = ref<number[]>([]) // 存储已选课程的编号
 
+// 加载教师列表
+const loadTeachers = async () => {
+  try {
+    const result = await userApi.getAllTeachers()
+    teachers.value = result.map(teacher => ({
+      userNO: teacher.userNO,
+      name: teacher.name
+    }))
+  } catch (error) {
+    console.error('获取教师列表失败:', error)
+    ElMessage.error('获取教师列表失败')
+  }
+}
+
+// 加载学生已选课程
+const loadSelectedCourses = async () => {
+  if (userRole.value !== 'STUDENT') return
+  
+  try {
+    // 获取当前用户信息
+    const currentUser = await userApi.getCurrentUser()
+    if (!currentUser) return
+    
+    const response = await courseApi.getSelectedCoursesByStudentNO(currentUser.userNO)
+    console.log('Selected courses response:', response)
+    
+    if (Array.isArray(response)) {
+      // 保存已选课程的编号
+      selectedCourseNOs.value = response.map(course => course.courseNO)
+      console.log('Selected course numbers:', selectedCourseNOs.value)
+    }
+  } catch (error) {
+    console.error('获取已选课程失败:', error)
+  }
+}
+
+// 加载课程列表
 const loadCourses = async () => {
   try {
     const response = await courseApi.getAllCourse()
     
     if (Array.isArray(response)) {
+      // 获取教师信息
+      const teacherMap = new Map(
+        teachers.value.map(teacher => [teacher.userNO, teacher.name])
+      )
+      
+      // 添加教师姓名和选课状态到课程信息中
+      const processedCourses = response.map(course => ({
+        ...course,
+        teacher: teacherMap.get(course.teacherNO) || '未知教师',
+        isSelected: selectedCourseNOs.value.includes(course.courseNO)
+      }))
+
+      // 前端分页
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
-      courses.value = response.slice(start, end)
+      courses.value = processedCourses.slice(start, end)
       total.value = response.length
-    } else {
-      console.error('Invalid response format:', response)
-      ElMessage.error('获取课程列表失败')
     }
   } catch (error) {
     console.error('获取课程列表失败:', error)
     ElMessage.error('获取课程列表失败')
   }
+}
+
+// 重新加载所有数据
+const reloadData = async () => {
+  await loadTeachers()
+  await loadSelectedCourses() // 先加载已选课程
+  await loadCourses() // 再加载课程列表
 }
 
 const handleSearch = () => {
@@ -93,7 +152,8 @@ const handleCurrentChange = (val: number) => {
   loadCourses()
 }
 
-const handleCourseAction = async (course: Course) => {
+// 处理课程操作
+const handleCourseAction = async (course: Course & { isSelected?: boolean }) => {
   try {
     if (course.isSelected) {
       await courseApi.cancelCourse(course.courseNO)
@@ -102,14 +162,15 @@ const handleCourseAction = async (course: Course) => {
       await courseApi.selectCourse(course.courseNO)
       ElMessage.success('选课成功')
     }
-    loadCourses()
-  } catch (error) {
+    await reloadData() // 重新加载数据
+  } catch (error: any) {
     console.error('操作失败:', error)
+    ElMessage.error(error.message || `${course.isSelected ? '退课' : '选课'}失败`)
   }
 }
 
-onMounted(() => {
-  loadCourses()
+onMounted(async () => {
+  await reloadData()
 })
 </script>
 

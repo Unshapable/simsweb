@@ -41,46 +41,72 @@ export const courseApi = {
   // 搜索课程
   searchCourse: (keyword: string) =>
     request<Course[]>('/api/course/searchCourse', {
-      params: { keyword }
+      params: { keyword },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     }),
 
   // 获取教师的课程
   getCoursesByTeacherNO: (teacherNO: string) =>
     request<Course[]>('/api/course/getCoursesByTeacherNO', {
-      params: { teacherNO }
+      params: { teacherNO },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     }),
 
   // 选课
   selectCourse: (courseNO: number) =>
     request<boolean>('/api/sc/selectCourse', {
       method: 'POST',
-      params: { courseNO }
+      params: { courseNO },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     }),
 
   // 退课
   cancelCourse: (courseNO: number) =>
     request<boolean>('/api/sc/cancelCourse', {
       method: 'POST',
-      params: { courseNO }
+      params: { courseNO },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     }),
 
   // 获取学生选课列表
   getSelectedCoursesByStudentNO: (studentNO: string) =>
-    request<Course[]>('/api/sc/getSelectedCoursesByStudentNO', {
-      params: { studentNO }
-    }),
+    request<ApiResponse<{ courseNO: number; courseName: string; teacherName: string; score: number | null }[]>>(
+      '/api/sc/getSelectedCoursesByStudentNO',
+      {
+        params: { studentNO },
+        headers: {
+          'token': localStorage.getItem('token') || ''
+        }
+      }
+    ),
 
   // 获取课程的学生列表
   getCourseStudents: (courseNO: number) =>
     request<{ userNO: string; username: string; grade: number | null }[]>(
       '/api/sc/getCourseStudents',
-      { params: { courseNO } }
+      {
+        params: { courseNO },
+        headers: {
+          'token': localStorage.getItem('token') || ''
+        }
+      }
     ),
 
   // 设置成绩
   setScore: (courseNO: number, studentNO: string, score: number) =>
     request<boolean>('/api/sc/setScore', {
       method: 'POST',
-      params: { courseNO, studentNO, score }
+      params: { courseNO, studentNO, score },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     })
 } 
