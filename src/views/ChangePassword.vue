@@ -64,8 +64,9 @@ const handleSubmit = async () => {
           newPassword: '',
           confirmPassword: ''
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('密码修改失败:', error)
+        ElMessage.error(error.message || '密码修改失败')
       }
     }
   })

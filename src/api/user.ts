@@ -53,7 +53,10 @@ export const userApi = {
     changePassword: (params: { oldPassword: string; newPassword: string }) =>
         request<boolean>('/api/user/changePassword', {
             method: 'POST',
-            params
+            params,
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
         }),
 
     // 更新用户信息

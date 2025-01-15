@@ -39,13 +39,13 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { userApi, type User, Gender } from '@/api/user'
+import { userApi, type User, Gender, UserRole } from '@/api/user'
 
 const userInfo = ref<User>({
   userNO: '',
   name: '',
   password: '',
-  role: 'STUDENT',
+  role: UserRole.STUDENT,
   gender: Gender.MALE,
   major: '',
   grade: undefined,
@@ -65,10 +65,11 @@ onMounted(async () => {
 
 const handleUpdate = async () => {
   try {
-    await userApi.updateUserInfo(userInfo.value)
+    await userApi.updateUser(userInfo.value)
     ElMessage.success('更新成功')
   } catch (error) {
     console.error('更新失败:', error)
+    ElMessage.error('更新失败')
   }
 }
 </script>
