@@ -43,7 +43,11 @@ export const userApi = {
 
     // 获取当前用户信息
     getCurrentUser: () =>
-        request<User>('/api/user/getCurrentUser'),
+        request<User>('/api/user/getCurrentUser', {
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
+        }),
 
     // 修改密码
     changePassword: (params: { oldPassword: string; newPassword: string }) =>
@@ -74,9 +78,17 @@ export const userApi = {
 
     // 获取所有用户
     getAllUsers: () =>
-        request<User[]>('/api/user/getAllUsers'),
+        request<User[]>('/api/user/getAllUsers', {
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
+        }),
 
     // 获取所有教师
     getAllTeachers: () =>
-        request<User[]>('/api/user/getAllTeachers')
+        request<User[]>('/api/user/getAllTeachers',{
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
+        })
 } 
