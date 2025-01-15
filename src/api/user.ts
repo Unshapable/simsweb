@@ -60,7 +60,11 @@ export const userApi = {
     updateUser: (data: User) =>
         request<boolean>('/api/user/updateUser', {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+                'token': localStorage.getItem('token') || ''
+            }
         }),
 
     // 注册用户
@@ -69,6 +73,7 @@ export const userApi = {
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
+                'Content-Type': 'application/json',
                 'token': localStorage.getItem('token') || ''
             }
         }),
