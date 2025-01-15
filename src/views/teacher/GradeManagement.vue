@@ -48,12 +48,7 @@
 <script lang="ts" setup>
 import { ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { courseApi } from '@/api'
-
-interface Course {
-  courseNO: number
-  courseName: string
-}
+import { courseApi, type Course } from '@/api'
 
 interface Student {
   userNO: string
@@ -73,7 +68,7 @@ const loadCourses = async () => {
       ElMessage.error('获取用户信息失败')
       return
     }
-    const result = await courseApi.getCoursesByTeacher(teacherNO)
+    const result = await courseApi.getCoursesByTeacherNO(teacherNO)
     courses.value = result
   } catch (error) {
     console.error('获取课程列表失败:', error)

@@ -175,16 +175,7 @@ const handleEdit = (row: User) => {
 
 // 处理删除用户
 const handleDelete = async (row: User) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该用户吗？', '提示', {
-      type: 'warning'
-    })
-    // TODO: 实现删除用户的 API 调用
-    ElMessage.success('删除成功')
-    loadUsers()
-  } catch {
-    // 用户取消删除
-  }
+  ElMessage.warning('暂不支持删除用户功能')
 }
 
 // 处理表单提交

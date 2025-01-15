@@ -20,14 +20,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { courseApi } from '@/api'
-
-interface Course {
-  courseNO: number
-  courseName: string
-  teacherName: string
-  credit: number
-}
+import { courseApi, type Course } from '@/api'
 
 const courses = ref<Course[]>([])
 
@@ -39,7 +32,7 @@ const loadMyCourses = async () => {
       ElMessage.error('获取用户信息失败')
       return
     }
-    const result = await courseApi.getSelectedCourses(currentUser)
+    const result = await courseApi.getSelectedCoursesByStudentNO(currentUser)
     courses.value = result
   } catch (error) {
     console.error('获取课程列表失败:', error)

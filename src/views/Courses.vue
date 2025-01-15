@@ -50,18 +50,18 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
-import { courseApi } from '@/api'
+import { courseApi, type Course } from '@/api'
 
 const userRole = ref(localStorage.getItem('userRole'))
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
-const courses = ref([])
+const courses = ref<Course[]>([])
 
 const loadCourses = async () => {
   try {
-    const { list, total: totalCount } = await courseApi.getCourses({
+    const { list, total: totalCount } = await courseApi.getAllCourse({
       page: currentPage.value,
       pageSize: pageSize.value,
       courseName: searchQuery.value
@@ -88,10 +88,10 @@ const handleCurrentChange = (val: number) => {
   loadCourses()
 }
 
-const handleCourseAction = async (course: any) => {
+const handleCourseAction = async (course: Course) => {
   try {
     if (course.isSelected) {
-      await courseApi.dropCourse(course.courseNO)
+      await courseApi.cancelCourse(course.courseNO)
       ElMessage.success('退课成功')
     } else {
       await courseApi.selectCourse(course.courseNO)

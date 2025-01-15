@@ -49,19 +49,17 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { courseApi, userApi } from '@/api'
+import { courseApi, userApi, type Course } from '@/api'
 
-interface Course {
-  courseNO: number
-  courseName: string
-  teacherNO: string
-  teacherName?: string
+interface Teacher {
+  userNO: string
+  name: string
 }
 
 const courses = ref<Course[]>([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('添加课程')
-const teachers = ref<any[]>([])
+const teachers = ref<Teacher[]>([])
 
 const form = ref({
   courseName: '',
@@ -71,7 +69,7 @@ const form = ref({
 // 加载课程列表
 const loadCourses = async () => {
   try {
-    const { list } = await courseApi.getCourses({ page: 1, pageSize: 100 })
+    const { list } = await courseApi.getAllCourse({ page: 1, pageSize: 100 })
     courses.value = list
   } catch (error) {
     console.error('获取课程列表失败:', error)
@@ -82,8 +80,11 @@ const loadCourses = async () => {
 // 加载教师列表
 const loadTeachers = async () => {
   try {
-    const { result } = await userApi.getAllTeachers()
-    teachers.value = result
+    const result = await userApi.getAllTeachers()
+    teachers.value = result.map(teacher => ({
+      userNO: teacher.userNO,
+      name: teacher.name
+    }))
   } catch (error) {
     console.error('获取教师列表失败:', error)
     ElMessage.error('获取教师列表失败')
@@ -112,17 +113,7 @@ const handleEdit = (row: Course) => {
 
 // 处理删除课程
 const handleDelete = async (row: Course) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该课程吗？', '提示', {
-      type: 'warning'
-    })
-    // 调用删除课程接口
-    await courseApi.deleteCourse(row.courseNO)
-    ElMessage.success('删除成功')
-    loadCourses()
-  } catch (error) {
-    console.error('删除课程失败:', error)
-  }
+  ElMessage.warning('暂不支持删除课程功能')
 }
 
 // 提交表单
