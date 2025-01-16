@@ -25,11 +25,46 @@
         :data="filteredStudents" 
         border 
         style="width: 100%"
-        :header-cell-style="{ background: '#f5f7fa' }"
+        :header-cell-style="{
+          background: '#f8fafc',
+          color: '#1f2937',
+          fontWeight: '600',
+          fontSize: '14px',
+          height: '50px'
+        }"
+        :cell-style="{
+          fontSize: '14px',
+          padding: '12px 0'
+        }"
+        row-class-name="table-row"
       >
-        <el-table-column prop="userNO" label="学号" width="120" />
-        <el-table-column prop="name" label="姓名" width="120" />
-        <el-table-column label="成绩" width="220">
+        <el-table-column 
+          prop="userNO" 
+          label="学号" 
+          min-width="180" 
+          align="center"
+        >
+          <template #default="{ row }">
+            <span class="student-no">{{ row.userNO }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column 
+          prop="name" 
+          label="姓名" 
+          min-width="180" 
+          align="center"
+        >
+          <template #default="{ row }">
+            <span class="student-name">{{ row.name }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column 
+          label="成绩" 
+          min-width="320"
+          align="center"
+        >
           <template #default="{ row }">
             <div class="score-input">
               <el-input-number 
@@ -46,6 +81,7 @@
                 size="small" 
                 @click="handleSetScore(row)"
                 :disabled="row.score === null"
+                class="submit-button"
               >
                 <el-icon><Check /></el-icon>
                 提交成绩
@@ -53,9 +89,18 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100" align="center">
+
+        <el-table-column 
+          label="状态" 
+          min-width="180" 
+          align="center"
+        >
           <template #default="{ row }">
-            <el-tag :type="row.score === null ? 'info' : 'success'">
+            <el-tag 
+              :type="row.score === null ? 'info' : 'success'"
+              class="status-tag"
+              effect="light"
+            >
               {{ row.score === null ? '未评分' : '已评分' }}
             </el-tag>
           </template>
@@ -80,13 +125,6 @@ interface Student {
   userNO: string
   name: string
   score: number | null
-}
-
-interface SelectedCourse {
-  courseNO: number
-  courseName: string
-  teacherName: string
-  score: number
 }
 
 const router = useRouter()
@@ -126,15 +164,11 @@ const loadStudents = async () => {
       const studentsWithScores = await Promise.all(
         response.map(async (student) => {
           try {
-            // 获取该学生的所有选课记录
-            const selectedCourses = await courseApi.getSelectedCoursesByStudentNO(student.userNO)
-            // 找到当前课程的成绩
-            const currentCourse = selectedCourses.find(
-              course => course.courseNO === currentCourseNO.value
-            )
+            // 直接获取当前课程的成绩
+            const score = await courseApi.getScore(currentCourseNO.value, student.userNO)
             return {
               ...student,
-              score: currentCourse?.score ?? null
+              score: score ?? null
             }
           } catch (error) {
             console.error(`获取学生 ${student.userNO} 的成绩失败:`, error)
@@ -179,6 +213,8 @@ onMounted(() => {
 <style scoped>
 .course-students {
   padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .page-header {
@@ -208,20 +244,51 @@ onMounted(() => {
 .table-card {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+:deep(.table-row) {
+  transition: background-color 0.3s;
+}
+
+:deep(.table-row:hover) {
+  background-color: #f8fafc !important;
+}
+
+.student-no {
+  font-family: Monaco, monospace;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #1f2937;
 }
 
 .score-input {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
+  justify-content: center;
+  padding: 8px 0;
 }
 
 .score-input-number {
-  width: 100px;
+  width: 140px;
 }
 
 :deep(.el-input-number .el-input__wrapper) {
-  padding: 0 8px;
+  padding: 0 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-input-number .el-input__wrapper:hover) {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.submit-button {
+  min-width: 120px;
 }
 
 :deep(.el-button .el-icon) {
@@ -229,19 +296,44 @@ onMounted(() => {
 }
 
 :deep(.el-table) {
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 :deep(.el-table th) {
-  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.el-table td) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.status-tag {
+  min-width: 72px;
+  text-align: center;
+  font-size: 13px;
+}
+
+:deep(.el-tag--success) {
+  background-color: #ecfdf5;
+  border-color: #d1fae5;
+  color: #059669;
+}
+
+:deep(.el-tag--info) {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #6b7280;
 }
 
 .table-footer {
-  padding: 32px 0;
+  padding: 40px 0;
+  background: #fff;
+  border-radius: 0 0 8px 8px;
 }
 
 :deep(.el-empty) {
-  padding: 40px 0;
+  padding: 48px 0;
 }
 </style> 

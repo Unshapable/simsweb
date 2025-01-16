@@ -108,6 +108,14 @@ export const courseApi = {
       headers: {
         'token': localStorage.getItem('token') || ''
       }
+    }),
+    // 获取成绩
+    getScore: (courseNO: number, studentNO: string) =>
+    request<number>('/api/sc/getScore', {
+      params: { courseNO, studentNO },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
     })
 }
 

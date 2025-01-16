@@ -96,6 +96,7 @@ const getCurrentUser = async () => {
     currentUser.value = user
     // 存储用户角色，用于路由权限控制
     localStorage.setItem('userRole', user.role)
+    localStorage.setItem('userNO', user.userNO)
   } catch (error) {
     console.error('获取用户信息失败:', error)
     // 如果获取用户信息失败，可能是token过期，跳转到登录页
@@ -111,12 +112,14 @@ const handleLogout = async () => {
     await userApi.logout()
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('userNO')
     currentUser.value = null
     ElMessage.success('退出登录成功')
     router.push('/login')
   } catch (error) {
     localStorage.removeItem('token')
     localStorage.removeItem('userRole')
+    localStorage.removeItem('userNO')
     router.push('/login')
     console.error('退出登录失败:', error)
   }
