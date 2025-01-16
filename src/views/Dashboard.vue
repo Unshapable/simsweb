@@ -46,7 +46,7 @@
             <el-icon><Notebook /></el-icon>
             <span>课程管理</span>
           </el-menu-item>
-          <el-menu-item index="admin/system-log">
+          <el-menu-item index="/admin/system-log">
             <el-icon><Monitor /></el-icon>
             <span>系统日志</span>
           </el-menu-item>

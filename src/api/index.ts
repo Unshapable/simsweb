@@ -109,4 +109,61 @@ export const courseApi = {
         'token': localStorage.getItem('token') || ''
       }
     })
+}
+
+// 统计信息接口类型
+interface ApiStatistic {
+  calls: number
+  success?: number
+  failure?: number
+  time: number
+}
+
+interface AllStatistics {
+  [key: string]: ApiStatistic
+}
+
+interface HourlyStatistic {
+  totalCalls: number
+  apis: {
+    [key: string]: {
+      calls: number
+      time: number
+    }
+  }
+  avgTime: number
+}
+
+interface HourlyStatistics {
+  [hour: string]: HourlyStatistic
+}
+
+interface TopApi extends ApiStatistic {
+  api: string
+}
+
+export const statisticsApi = {
+  // 获取所有统计信息
+  getAllStatistics: () =>
+    request<AllStatistics>('/api/statistics/all', {
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
+    }),
+
+  // 获取最近24小时统计
+  getLast24HourStatistics: () =>
+    request<HourlyStatistics>('/api/statistics/last24hours', {
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
+    }),
+
+  // 获取调用次数最多的API
+  getTopApis: () =>
+    request<TopApi[]>('/api/statistics/top', {
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
+    })
 } 

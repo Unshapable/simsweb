@@ -5,7 +5,7 @@ const BASE_URL = ''
 
 // 请求配置接口
 interface RequestConfig extends RequestInit {
-    params?: Record<string, string>
+    params?: Record<string, string | number>
     noToken?: boolean  // 添加一个标记，表示是否需要token
 }
 
@@ -21,7 +21,9 @@ export const request = async <T>(url: string, config?: RequestConfig): Promise<T
     try {
         // 处理查询参数
         if (config?.params) {
-            const queryString = new URLSearchParams(config.params).toString()
+            const queryString = new URLSearchParams(
+                Object.entries(config.params).map(([key, value]) => [key, String(value)])
+            ).toString()
             url = `${url}?${queryString}`
         }
 
@@ -31,29 +33,17 @@ export const request = async <T>(url: string, config?: RequestConfig): Promise<T
         // 获取token（如果需要的话）
         const token = !config?.noToken ? localStorage.getItem('token') : null
 
-        // 打印请求信息，方便调试
-        console.log('Request URL:', fullUrl)
-        console.log('Request Token:', token)
-
         // 合并默认配置
         const finalConfig: RequestInit = {
             headers: {
                 'Content-Type': 'application/json',
-                ...(token ? { 'Authorization': token } : {}),
+                ...(token ? { 'token': token } : {}),
                 ...(config?.headers || {})
             },
             ...config
         }
 
-        // 打印完整的请求配置
-        console.log('Final Request Config:', {
-            ...finalConfig,
-            headers: finalConfig.headers
-        })
-
         const response = await fetch(fullUrl, finalConfig)
-
-        // 打印响应状态，方便调试
         console.log('Response Status:', response.status)
 
         // 处理 401 未授权的情况
@@ -64,11 +54,15 @@ export const request = async <T>(url: string, config?: RequestConfig): Promise<T
             return Promise.reject('Unauthorized')
         }
 
-        const data: ApiResponse<T> = await response.json()
-
-        // 打印响应数据，方便调试
+        const data = await response.json()
         console.log('Response Data:', data)
 
+        // 处理统计接口的特殊情况
+        if (url.startsWith('/api/statistics/')) {
+            return data as T
+        }
+
+        // 处理标准接口响应
         if (data.code === '200') {
             return data.result
         } else {

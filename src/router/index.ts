@@ -80,6 +80,12 @@ const router = createRouter({
           name: 'CourseManagement',
           component: () => import('../views/admin/CourseManagement.vue'),
           meta: { requiresAuth: true, role: 'ADMIN', title: '课程管理' }
+        },
+        {
+          path: 'admin/system-log',
+          name: 'SystemLog',
+          component: () => import('../views/admin/SystemLog.vue'),
+          meta: { requiresAuth: true, role: 'ADMIN', title: '系统日志' }
         }
       ]
     }
