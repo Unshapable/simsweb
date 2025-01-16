@@ -61,22 +61,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const courses = ref<Course[]>([])
-const teachers = ref<Teacher[]>([])
 const selectedCourseNOs = ref<number[]>([]) // 存储已选课程的编号
-
-// 加载教师列表
-const loadTeachers = async () => {
-  try {
-    const result = await userApi.getAllTeachers()
-    teachers.value = result.map(teacher => ({
-      userNO: teacher.userNO,
-      name: teacher.name
-    }))
-  } catch (error) {
-    console.error('获取教师列表失败:', error)
-    ElMessage.error('获取教师列表失败')
-  }
-}
 
 // 加载学生已选课程
 const loadSelectedCourses = async () => {
@@ -106,16 +91,24 @@ const loadCourses = async () => {
     const response = await courseApi.getAllCourse()
     
     if (Array.isArray(response)) {
-      // 获取教师信息
-      const teacherMap = new Map(
-        teachers.value.map(teacher => [teacher.userNO, teacher.name])
-      )
-      
-      // 添加教师姓名和选课状态到课程信息中
-      const processedCourses = response.map(course => ({
-        ...course,
-        teacher: teacherMap.get(course.teacherNO) || '未知教师',
-        isSelected: selectedCourseNOs.value.includes(course.courseNO)
+      // 获取每个课程的教师信息
+      const processedCourses = await Promise.all(response.map(async course => {
+        // 获取教师信息
+        try {
+          const teacherInfo = await userApi.getUserByUserNO(course.teacherNO)
+          return {
+            ...course,
+            teacher: teacherInfo.name || '未知教师',
+            isSelected: selectedCourseNOs.value.includes(course.courseNO)
+          }
+        } catch (error) {
+          console.error(`获取教师 ${course.teacherNO} 信息失败:`, error)
+          return {
+            ...course,
+            teacher: '未知教师',
+            isSelected: selectedCourseNOs.value.includes(course.courseNO)
+          }
+        }
       }))
 
       // 前端分页
@@ -132,7 +125,6 @@ const loadCourses = async () => {
 
 // 重新加载所有数据
 const reloadData = async () => {
-  await loadTeachers()
   await loadSelectedCourses() // 先加载已选课程
   await loadCourses() // 再加载课程列表
 }

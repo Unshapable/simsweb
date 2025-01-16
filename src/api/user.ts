@@ -84,7 +84,10 @@ export const userApi = {
     // 获取指定用户信息
     getUserByUserNO: (userNO: string) =>
         request<User>('/api/user/getUserByUserNO', {
-            params: { userNO }
+            params: { userNO },
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
         }),
 
     // 获取所有用户
