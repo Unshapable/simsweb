@@ -56,7 +56,7 @@ const handleLogin = async () => {
           localStorage.setItem('token', token)
           await getCurrentUser()
           ElMessage.success('登录成功')
-          router.push('/dashboard')
+          router.push('/home')
         }
       } catch (error) {
         console.error(error)
