@@ -73,13 +73,15 @@
         >
           <template #default="{ row }">
             <el-button 
-              type="primary" 
+              :type="isSelected(row) ? 'danger' : 'primary'"
               size="small"
               @click="handleSelect(row)"
-              :disabled="isSelected(row)"
               class="action-button"
             >
-              {{ isSelected(row) ? '已选课' : '选课' }}
+              <el-icon>
+                <component :is="isSelected(row) ? 'Delete' : 'Plus'" />
+              </el-icon>
+              {{ isSelected(row) ? '退课' : '选课' }}
             </el-button>
           </template>
         </el-table-column>
@@ -95,7 +97,7 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
+import { Plus, Delete, Search } from '@element-plus/icons-vue'
 import { courseApi, userApi, type Course } from '@/api'
 import { UserRole } from '@/api/user'
 
@@ -105,7 +107,6 @@ interface CourseWithSelection extends Course {
 
 const courses = ref<CourseWithSelection[]>([])
 const searchText = ref('')
-const selectedCourses = ref<number[]>([])
 const userRole = ref(localStorage.getItem('userRole'))
 
 // 过滤后的课程列表
@@ -126,18 +127,28 @@ const handleSearch = () => {
 
 // 检查课程是否已选
 const isSelected = (course: CourseWithSelection) => {
-  return selectedCourses.value.includes(course.courseNO)
+  return course.isSelected || false
 }
 
-// 加载已选课程
-const loadSelectedCourses = async () => {
+// 加载已选课程并标记状态
+const markSelectedCourses = async () => {
   try {
     const userNO = localStorage.getItem('userNO')
     if (!userNO) return
     
     const response = await courseApi.getSelectedCoursesByStudentNO(userNO)
-    if (response && Array.isArray(response.result)) {
-      selectedCourses.value = response.result.map(course => course.courseNO)
+    
+    if (Array.isArray(response)) {
+      const selectedCourseNOs = response.map(course => course.courseNO)
+      
+      // 更新每个课程的选课状态
+      courses.value = courses.value.map(course => {
+        const isSelected = selectedCourseNOs.includes(course.courseNO)
+        return {
+          ...course,
+          isSelected
+        }
+      })
     }
   } catch (error) {
     console.error('获取已选课程失败:', error)
@@ -156,18 +167,25 @@ const loadCourses = async () => {
             const teacherInfo = await userApi.getUserByUserNO(course.teacherNO)
             return {
               ...course,
-              teacherName: teacherInfo.name || '未知教师'
+              teacherName: teacherInfo.name || '未知教师',
+              isSelected: false // 初始化选课状态为 false
             }
           } catch (error) {
             console.error(`获取教师 ${course.teacherNO} 信息失败:`, error)
             return {
               ...course,
-              teacherName: '未知教师'
+              teacherName: '未知教师',
+              isSelected: false
             }
           }
         })
       )
       courses.value = coursesWithTeacher
+
+      // 如果是学生，立即加载选课状态
+      if (userRole.value === UserRole.STUDENT) {
+        await markSelectedCourses()
+      }
     } else {
       ElMessage.error('获取课程列表失败')
     }
@@ -177,18 +195,18 @@ const loadCourses = async () => {
   }
 }
 
-// 选课
+// 处理选课/退课
 const handleSelect = async (course: CourseWithSelection) => {
   try {
     if (isSelected(course)) {
       await courseApi.cancelCourse(course.courseNO)
       ElMessage.success('退课成功')
+      course.isSelected = false
     } else {
       await courseApi.selectCourse(course.courseNO)
       ElMessage.success('选课成功')
+      course.isSelected = true
     }
-    // 重新加载已选课程
-    await loadSelectedCourses()
   } catch (error: any) {
     console.error('操作失败:', error)
     ElMessage.error(error.message || `${isSelected(course) ? '退课' : '选课'}失败`)
@@ -198,10 +216,6 @@ const handleSelect = async (course: CourseWithSelection) => {
 // 初始化
 onMounted(async () => {
   await loadCourses()
-  // 只有学生才需要加载已选课程
-  if (userRole.value === UserRole.STUDENT) {
-    await loadSelectedCourses()
-  }
 })
 </script>
 
@@ -260,7 +274,11 @@ onMounted(async () => {
 }
 
 .action-button {
-  min-width: 80px;
+  min-width: 88px;
+}
+
+:deep(.el-button .el-icon) {
+  margin-right: 4px;
 }
 
 :deep(.el-button.is-disabled) {

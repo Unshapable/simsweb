@@ -9,10 +9,12 @@
         <div class="avatar-section">
           <el-avatar :size="80" :icon="UserFilled" class="user-avatar" />
           <div class="user-info">
-            <h3>{{ currentUser?.name || '未知用户' }}</h3>
-            <el-tag :type="roleTagType" effect="light" class="role-tag">
-              {{ roleLabels[currentUser?.role as UserRole] || '未知角色' }}
-            </el-tag>
+            <div class="user-info-header">
+              <h3>{{ currentUser?.name || '未知用户' }}</h3>
+              <el-tag :type="roleTagType" effect="light" class="role-tag">
+                {{ roleLabels[currentUser?.role as UserRole] || '未知角色' }}
+              </el-tag>
+            </div>
           </div>
         </div>
         <el-button type="primary" @click="handleEdit" v-if="!isEditing">
@@ -297,8 +299,14 @@ onMounted(() => {
   font-size: 32px;
 }
 
+.user-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .user-info h3 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 20px;
   color: #1f2937;
 }
