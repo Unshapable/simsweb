@@ -1,6 +1,8 @@
 <template>
   <div class="system-log">
-    <h2>系统日志</h2>
+    <div class="page-header">
+      <h2>系统日志</h2>
+    </div>
 
     <!-- 顶部统计卡片 -->
     <el-row :gutter="20" class="statistics-cards">
@@ -285,7 +287,21 @@ onMounted(async () => {
 
 <style scoped>
 .system-log {
-  padding: 20px;
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #1f2937;
+  font-weight: 500;
 }
 
 .statistics-cards {

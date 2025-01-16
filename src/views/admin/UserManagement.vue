@@ -8,23 +8,72 @@
       </el-button>
     </div>
 
-    <el-table :data="users" border style="width: 100%">
-      <el-table-column prop="userNO" label="学工号" width="120" />
-      <el-table-column prop="name" label="姓名" width="120" />
-      <el-table-column prop="role" label="角色" width="100">
+    <el-table 
+      :data="users" 
+      border 
+      style="width: 100%"
+      :header-cell-style="{
+        background: '#f8fafc',
+        color: '#1f2937',
+        fontWeight: '600',
+        fontSize: '14px',
+        height: '50px'
+      }"
+      :cell-style="{
+        fontSize: '14px',
+        padding: '12px 0'
+      }"
+      row-class-name="table-row"
+    >
+      <el-table-column prop="userNO" label="学工号" width="120" align="center">
         <template #default="{ row }">
-          {{ roleLabels[row.role as UserRole] }}
+          <span class="user-no">{{ row.userNO }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="gender" label="性别" width="80">
+
+      <el-table-column prop="name" label="姓名" width="120" align="center">
         <template #default="{ row }">
-          {{ genderLabels[row.gender as Gender] }}
+          <span class="user-name">{{ row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="major" label="专业" />
-      <el-table-column prop="grade" label="年级" width="80" />
-      <el-table-column prop="email" label="邮箱" min-width="180" />
-      <el-table-column label="操作" width="200" fixed="right">
+
+      <el-table-column prop="role" label="角色" width="100" align="center">
+        <template #default="{ row }">
+          <el-tag 
+            :type="getTagType(row.role)"
+            effect="light"
+            class="role-tag"
+          >
+            {{ roleLabels[row.role as UserRole] }}
+          </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="gender" label="性别" width="80" align="center">
+        <template #default="{ row }">
+          <span class="gender">{{ genderLabels[row.gender as Gender] }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="major" label="专业" align="center">
+        <template #default="{ row }">
+          <span class="major">{{ row.major }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="grade" label="年级" width="80" align="center">
+        <template #default="{ row }">
+          <span class="grade">{{ row.grade || '-' }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="email" label="邮箱" min-width="180" align="center">
+        <template #default="{ row }">
+          <span class="email">{{ row.email || '-' }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作" width="200" fixed="right" align="center">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
             <el-icon><Edit /></el-icon>
@@ -250,6 +299,20 @@ const handleSubmit = async () => {
   }
 }
 
+// 获取角色标签类型
+const getTagType = (role: UserRole) => {
+  switch (role) {
+    case UserRole.ADMIN:
+      return 'danger'
+    case UserRole.TEACHER:
+      return 'warning'
+    case UserRole.STUDENT:
+      return 'success'
+    default:
+      return 'info'
+  }
+}
+
 onMounted(() => {
   loadUsers()
 })
@@ -257,72 +320,128 @@ onMounted(() => {
 
 <style scoped>
 .user-management {
-  padding: 20px;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .page-header h2 {
   margin: 0;
   font-size: 24px;
-  color: #303133;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+:deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-table th) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.el-table td) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+:deep(.table-row) {
+  transition: background-color 0.3s;
+}
+
+:deep(.table-row:hover) {
+  background-color: #f8fafc !important;
+}
+
+.user-no {
+  font-family: Monaco, monospace;
+  color: #4b5563;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.role-tag {
+  font-size: 13px;
+  padding: 2px 10px;
+}
+
+.gender, .grade, .email {
+  color: #4b5563;
+}
+
+.major {
+  color: #1f2937;
 }
 
 :deep(.el-button) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 8px 16px;
+  border-radius: 6px;
 }
 
-:deep(.el-table) {
-  margin-top: 20px;
-  border-radius: 4px;
-  overflow: hidden;
+:deep(.el-button--danger) {
+  background-color: #ef4444;
+  border-color: #ef4444;
 }
 
-:deep(.el-dialog__body) {
-  padding: 20px 40px;
+:deep(.el-button--danger:hover) {
+  background-color: #dc2626;
+  border-color: #dc2626;
 }
 
-:deep(.el-form-item:last-child) {
-  margin-bottom: 0;
+/* 空数据状态样式 */
+:deep(.el-table__empty-block) {
+  padding: 32px 0;
 }
 
-.dialog-footer {
+:deep(.el-table__empty-text) {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 表格内容垂直居中 */
+:deep(.el-table .cell) {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* 角色标签样式 */
+:deep(.el-tag--success) {
+  background-color: #ecfdf5;
+  border-color: #d1fae5;
+  color: #059669;
+}
+
+:deep(.el-tag--warning) {
+  background-color: #fffbeb;
+  border-color: #fef3c7;
+  color: #d97706;
+}
+
+:deep(.el-tag--danger) {
+  background-color: #fef2f2;
+  border-color: #fee2e2;
+  color: #dc2626;
 }
 
 :deep(.el-select) {
   width: 100%;
 }
 
-.delete-confirm {
-  text-align: center;
-  padding: 20px 0;
-}
-
-.warning-icon {
-  font-size: 48px;
-  color: #f59e0b;
-  margin-bottom: 16px;
-}
-
-.warning-text {
-  color: #dc2626;
-  font-size: 14px;
-  margin: 8px 0 0;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
+:deep(.el-form-item:last-child) {
+  margin-bottom: 0;
 }
 </style>

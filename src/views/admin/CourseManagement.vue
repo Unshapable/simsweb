@@ -8,11 +8,42 @@
       </el-button>
     </div>
 
-    <el-table :data="courses" border style="width: 100%">
-      <el-table-column prop="courseNO" label="课程编号" width="120" />
-      <el-table-column prop="courseName" label="课程名称" min-width="180" />
-      <el-table-column prop="teacherName" label="授课教师" width="120" />
-      <el-table-column label="操作" width="200" fixed="right">
+    <el-table 
+      :data="courses" 
+      border 
+      style="width: 100%"
+      :header-cell-style="{
+        background: '#f8fafc',
+        color: '#1f2937',
+        fontWeight: '600',
+        fontSize: '14px',
+        height: '50px'
+      }"
+      :cell-style="{
+        fontSize: '14px',
+        padding: '12px 0'
+      }"
+      row-class-name="table-row"
+    >
+      <el-table-column prop="courseNO" label="课程编号" width="120" align="center">
+        <template #default="{ row }">
+          <span class="course-no">{{ row.courseNO }}</span>
+        </template>
+      </el-table-column>
+      
+      <el-table-column prop="courseName" label="课程名称" min-width="180" align="center">
+        <template #default="{ row }">
+          <span class="course-name">{{ row.courseName }}</span>
+        </template>
+      </el-table-column>
+      
+      <el-table-column prop="teacherName" label="授课教师" width="120" align="center">
+        <template #default="{ row }">
+          <span class="teacher-name">{{ row.teacherName }}</span>
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="操作" width="200" fixed="right" align="center">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
             <el-icon><Edit /></el-icon>
@@ -299,6 +330,8 @@ onMounted(async () => {
 }
 
 :deep(.el-button) {
+  padding: 8px 16px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -310,5 +343,70 @@ onMounted(async () => {
 
 :deep(.el-form-item:last-child) {
   margin-bottom: 0;
+}
+
+:deep(.el-table) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-table th) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.el-table td) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+:deep(.table-row) {
+  transition: background-color 0.3s;
+}
+
+:deep(.table-row:hover) {
+  background-color: #f8fafc !important;
+}
+
+.course-no {
+  font-family: Monaco, monospace;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.course-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.teacher-name {
+  color: #4b5563;
+}
+
+:deep(.el-button--danger) {
+  background-color: #ef4444;
+  border-color: #ef4444;
+}
+
+:deep(.el-button--danger:hover) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* 空数据状态样式 */
+:deep(.el-table__empty-block) {
+  padding: 32px 0;
+}
+
+:deep(.el-table__empty-text) {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* 表格内容垂直居中 */
+:deep(.el-table .cell) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 </style> 

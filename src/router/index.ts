@@ -49,12 +49,6 @@ const router = createRouter({
           component: () => import('../views/student/MyCourses.vue'),
           meta: { requiresAuth: true, role: 'STUDENT', title: '我的课程' }
         },
-        {
-          path: 'student/my-grades',
-          name: 'MyGrades',
-          component: () => import('../views/student/MyGrades.vue'),
-          meta: { requiresAuth: true, role: 'STUDENT', title: '成绩查询' }
-        },
         // 教师特有的路由
         {
           path: 'teacher/teaching-courses',
