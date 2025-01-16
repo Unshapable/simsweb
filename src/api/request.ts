@@ -1,7 +1,7 @@
 import { ElMessage } from 'element-plus'
 
 // 基础请求地址改回空字符串，使用相对路径
-const BASE_URL = ''
+const BASE_URL = 'http://172.29.4.105:31180'
 
 // 请求配置接口
 interface RequestConfig extends RequestInit {
