@@ -59,6 +59,12 @@ const router = createRouter({
           component: () => import('../views/teacher/GradeManagement.vue'),
           meta: { role: 'TEACHER', title: '成绩管理' }
         },
+        {
+          path: '/teacher/course/:courseNO/students',
+          name: 'CourseStudents',
+          component: () => import('@/views/teacher/CourseStudents.vue'),
+          meta: { role: 'TEACHER', title: '课程学生' }
+        },
         // 管理员特有的路由
         {
           path: 'user-management',

@@ -5,7 +5,11 @@
       <el-table-column prop="courseNO" label="课程编号" width="120" />
       <el-table-column prop="courseName" label="课程名称" />
       <el-table-column prop="teacherName" label="任课教师" width="120" />
-      <el-table-column prop="credit" label="学分" width="80" />
+      <el-table-column prop="score" label="成绩" width="80">
+        <template #default="{ row }">
+          {{ row.score === null ? '未评分' : row.score }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="120">
         <template #default="{ row }">
           <el-button type="danger" size="small" @click="handleDrop(row)">
@@ -20,20 +24,36 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { courseApi, type Course } from '@/api'
+import { courseApi, userApi } from '@/api'
 
-const courses = ref<Course[]>([])
+interface SelectedCourse {
+  courseNO: number
+  courseName: string
+  teacherName: string
+  score: number | null
+}
+
+const courses = ref<SelectedCourse[]>([])
 
 // 加载我的课程列表
 const loadMyCourses = async () => {
   try {
-    const currentUser = localStorage.getItem('userNO')
+    // 获取当前用户信息
+    const currentUser = await userApi.getCurrentUser()
     if (!currentUser) {
       ElMessage.error('获取用户信息失败')
       return
     }
-    const result = await courseApi.getSelectedCoursesByStudentNO(currentUser)
-    courses.value = result
+
+    const response = await courseApi.getSelectedCoursesByStudentNO(currentUser.userNO)
+    console.log('Selected courses:', response)
+    
+    if (Array.isArray(response)) {
+      courses.value = response
+      console.log('Courses value:', courses.value)
+    } else {
+      ElMessage.error('获取课程列表失败')
+    }
   } catch (error) {
     console.error('获取课程列表失败:', error)
     ElMessage.error('获取课程列表失败')
@@ -41,7 +61,7 @@ const loadMyCourses = async () => {
 }
 
 // 处理退课
-const handleDrop = async (course: Course) => {
+const handleDrop = async (course: SelectedCourse) => {
   try {
     await ElMessageBox.confirm('确定要退选该课程吗？', '提示', {
       type: 'warning'
@@ -50,8 +70,10 @@ const handleDrop = async (course: Course) => {
     ElMessage.success('退课成功')
     loadMyCourses()
   } catch (error) {
-    console.error('退课失败:', error)
-    ElMessage.error('退课失败')
+    if (error !== 'cancel') {
+      console.error('退课失败:', error)
+      ElMessage.error('退课失败')
+    }
   }
 }
 
