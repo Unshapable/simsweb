@@ -5,6 +5,8 @@
         v-model="searchQuery"
         placeholder="搜索课程名称"
         class="search-input"
+        clearable
+        @clear="handleSearchClear"
       >
         <template #append>
           <el-button :icon="Search" @click="handleSearch" />
@@ -129,9 +131,55 @@ const reloadData = async () => {
   await loadCourses() // 再加载课程列表
 }
 
-const handleSearch = () => {
-  currentPage.value = 1
-  loadCourses()
+// 处理搜索
+const handleSearch = async () => {
+  try {
+    if (!searchQuery.value.trim()) {
+      // 如果搜索框为空，加载所有课程
+      await loadCourses()
+      return
+    }
+
+    const response = await courseApi.searchCourse(searchQuery.value.trim())
+    console.log('Search response:', response)
+    
+    if (Array.isArray(response)) {
+      // 获取每个课程的教师信息
+      const processedCourses = await Promise.all(response.map(async course => {
+        try {
+          const teacherInfo = await userApi.getUserByUserNO(course.teacherNO)
+          return {
+            ...course,
+            teacher: teacherInfo.name || '未知教师',
+            isSelected: selectedCourseNOs.value.includes(course.courseNO)
+          }
+        } catch (error) {
+          console.error(`获取教师 ${course.teacherNO} 信息失败:`, error)
+          return {
+            ...course,
+            teacher: '未知教师',
+            isSelected: selectedCourseNOs.value.includes(course.courseNO)
+          }
+        }
+      }))
+
+      courses.value = processedCourses
+      total.value = processedCourses.length
+      currentPage.value = 1 // 重置页码
+    } else {
+      ElMessage.error('搜索失败')
+    }
+  } catch (error) {
+    console.error('搜索失败:', error)
+    ElMessage.error('搜索失败')
+  }
+}
+
+// 监听搜索框清空事件
+const handleSearchClear = async () => {
+  if (!searchQuery.value) {
+    await loadCourses()
+  }
 }
 
 const handleSizeChange = (val: number) => {
