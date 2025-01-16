@@ -4,7 +4,7 @@
       <div class="login-header">
         <el-icon class="logo-icon"><School /></el-icon>
         <h2>学生信息管理系统</h2>
-        <p class="subtitle">Education Management System</p>
+        <p class="subtitle">Student Infomation Management System</p>
       </div>
       
       <el-form 

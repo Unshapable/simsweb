@@ -38,6 +38,27 @@ export const courseApi = {
       }
     }),
 
+    // 更新课程
+    updateCourse: (data: { courseNO: number; courseName: string; teacherNO: string }) =>
+    request<boolean>('/api/course/updateCourse', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        'token': localStorage.getItem('token') || ''
+      }
+    }),
+
+    // 删除课程
+    deleteCourse: (courseNO: number) =>
+    request<boolean>('/api/course/deleteCourse', {
+      method: 'POST',
+      params: { courseNO },
+      headers: {
+        'token': localStorage.getItem('token') || ''
+      }
+    }),
+
   // 搜索课程
   searchCourse: (keyword: string) =>
     request<Course[]>('/api/course/searchCourse', {

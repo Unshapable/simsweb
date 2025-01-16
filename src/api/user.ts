@@ -72,6 +72,15 @@ export const userApi = {
                 'token': localStorage.getItem('token') || ''
             }
         }),
+    // 删除用户
+    deleteUser: (userNO: string) =>
+        request<boolean>('/api/user/deleteUser', {
+            method: 'POST',
+            params: { userNO },
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
+        }),
 
     // 注册用户
     register: (data: User) =>

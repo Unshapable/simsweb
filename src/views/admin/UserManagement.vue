@@ -85,13 +85,35 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 添加确认删除对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title="确认删除"
+      width="400px"
+      center
+    >
+      <div class="delete-confirm">
+        <el-icon class="warning-icon"><Warning /></el-icon>
+        <p>确定要删除用户 "{{ selectedUser?.name }}" 吗？</p>
+        <p class="warning-text">此操作不可恢复！</p>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="confirmDelete" :loading="isDeleting">
+            确认删除
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Warning } from '@element-plus/icons-vue'
 import { userApi, User, UserRole, Gender } from '@/api/user'
 
 const users = ref<User[]>([])
@@ -134,6 +156,10 @@ const rules = {
   email: [{ type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }]
 }
 
+const deleteDialogVisible = ref(false)
+const selectedUser = ref<User | null>(null)
+const isDeleting = ref(false)
+
 // 加载用户列表
 const loadUsers = async () => {
   try {
@@ -173,8 +199,32 @@ const handleEdit = (row: User) => {
 }
 
 // 处理删除用户
-const handleDelete = async (row: User) => {
-  ElMessage.warning('暂不支持删除用户功能')
+const handleDelete = (user: User) => {
+  selectedUser.value = user
+  deleteDialogVisible.value = true
+}
+
+// 确认删除
+const confirmDelete = async () => {
+  if (!selectedUser.value) return
+  
+  try {
+    isDeleting.value = true
+    const response = await userApi.deleteUser(selectedUser.value.userNO)
+    
+    if (response === true) {
+      ElMessage.success('删除成功')
+      deleteDialogVisible.value = false
+      // 重新加载用户列表
+      loadUsers()
+    } else {
+      throw new Error('删除失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '删除失败')
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 // 处理表单提交
@@ -251,5 +301,28 @@ onMounted(() => {
 
 :deep(.el-select) {
   width: 100%;
+}
+
+.delete-confirm {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.warning-icon {
+  font-size: 48px;
+  color: #f59e0b;
+  margin-bottom: 16px;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 </style>

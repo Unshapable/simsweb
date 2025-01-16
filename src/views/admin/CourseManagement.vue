@@ -2,7 +2,7 @@
   <div class="course-management">
     <div class="page-header">
       <h2>课程管理</h2>
-      <el-button type="primary" @click="showAddCourseDialog">
+      <el-button type="primary" @click="showAddDialog">
         <el-icon><Plus /></el-icon>
         添加课程
       </el-button>
@@ -10,8 +10,8 @@
 
     <el-table :data="courses" border style="width: 100%">
       <el-table-column prop="courseNO" label="课程编号" width="120" />
-      <el-table-column prop="courseName" label="课程名称" />
-      <el-table-column prop="teacherName" label="任课教师" width="120" />
+      <el-table-column prop="courseName" label="课程名称" min-width="180" />
+      <el-table-column prop="teacherName" label="授课教师" width="120" />
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
@@ -27,17 +27,22 @@
     </el-table>
 
     <!-- 添加/编辑课程对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="课程名称" required>
-          <el-input v-model="form.courseName" placeholder="请输入课程名称" />
+    <el-dialog 
+      v-model="dialogVisible" 
+      :title="isEdit ? '编辑课程' : '添加课程'"
+      width="500px"
+    >
+      <el-form 
+        ref="formRef"
+        :model="courseForm"
+        :rules="rules"
+        label-width="100px"
+      >
+        <el-form-item label="课程名称" prop="courseName">
+          <el-input v-model="courseForm.courseName" placeholder="请输入课程名称" />
         </el-form-item>
-        <el-form-item label="任课教师" required>
-          <el-select 
-            v-model="form.teacherNO" 
-            placeholder="请选择教师"
-            style="width: 100%"
-          >
+        <el-form-item label="授课教师" prop="teacherNO">
+          <el-select v-model="courseForm.teacherNO" placeholder="请选择教师" class="w-full">
             <el-option
               v-for="teacher in teachers"
               :key="teacher.userNO"
@@ -48,8 +53,34 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit" :loading="isSubmitting">
+            确定
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 删除确认对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title="确认删除"
+      width="400px"
+      center
+    >
+      <div class="delete-confirm">
+        <el-icon class="warning-icon"><Warning /></el-icon>
+        <p>确定要删除课程 "{{ selectedCourse?.courseName }}" 吗？</p>
+        <p class="warning-text">此操作不可恢复！</p>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="confirmDelete" :loading="isDeleting">
+            确认删除
+          </el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -57,45 +88,53 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import { Plus, Edit, Delete, Warning } from '@element-plus/icons-vue'
 import { courseApi, userApi, type Course } from '@/api'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
-
-interface Teacher {
-  userNO: string
-  name: string
-}
+import type { FormInstance } from 'element-plus'
+import type { User } from '@/api/user'
 
 const courses = ref<Course[]>([])
+const teachers = ref<User[]>([])
 const dialogVisible = ref(false)
-const dialogTitle = ref('添加课程')
-const teachers = ref<Teacher[]>([])
+const deleteDialogVisible = ref(false)
+const isEdit = ref(false)
+const isSubmitting = ref(false)
+const isDeleting = ref(false)
+const formRef = ref<FormInstance>()
+const selectedCourse = ref<Course | null>(null)
 
-const form = ref({
+const courseForm = ref({
+  courseNO: 0,
   courseName: '',
   teacherNO: ''
 })
 
+const rules = {
+  courseName: [
+    { required: true, message: '请输入课程名称', trigger: 'blur' }
+  ],
+  teacherNO: [
+    { required: true, message: '请选择授课教师', trigger: 'change' }
+  ]
+}
+
 // 加载课程列表
 const loadCourses = async () => {
   try {
-    const response = await courseApi.getAllCourse()
-    console.log('Response:', response)
-    
-    if (Array.isArray(response)) {
+    const data = await courseApi.getAllCourse()
+    if (Array.isArray(data)) {
       // 获取教师信息
       const teacherMap = new Map(
         teachers.value.map(teacher => [teacher.userNO, teacher.name])
       )
       
       // 添加教师姓名到课程信息中
-      courses.value = response.map(course => ({
+      courses.value = data.map(course => ({
         ...course,
         teacherName: teacherMap.get(course.teacherNO) || '未知教师'
       }))
-      console.log('Processed courses:', courses.value)
     } else {
-      console.error('Invalid response format:', response)
       ElMessage.error('获取课程列表失败')
     }
   } catch (error) {
@@ -107,72 +146,111 @@ const loadCourses = async () => {
 // 加载教师列表
 const loadTeachers = async () => {
   try {
-    const result = await userApi.getAllTeachers()
-    teachers.value = result.map(teacher => ({
-      userNO: teacher.userNO,
-      name: teacher.name
-    }))
+    const data = await userApi.getAllTeachers()
+    teachers.value = data
   } catch (error) {
     console.error('获取教师列表失败:', error)
     ElMessage.error('获取教师列表失败')
   }
 }
 
-// 显示添加课程对话框
-const showAddCourseDialog = () => {
-  dialogTitle.value = '添加课程'
-  form.value = {
+// 显示添加对话框
+const showAddDialog = () => {
+  isEdit.value = false
+  courseForm.value = {
+    courseNO: 0,
     courseName: '',
     teacherNO: ''
   }
   dialogVisible.value = true
 }
 
-// 显示编辑课程对话框
-const handleEdit = (row: Course) => {
-  dialogTitle.value = '编辑课程'
-  form.value = {
-    courseName: row.courseName,
-    teacherNO: row.teacherNO
+// 处理编辑
+const handleEdit = (course: Course) => {
+  isEdit.value = true
+  courseForm.value = {
+    courseNO: course.courseNO,
+    courseName: course.courseName,
+    teacherNO: course.teacherNO
   }
   dialogVisible.value = true
 }
 
-// 处理删除课程
-const handleDelete = async (row: Course) => {
-  ElMessage.warning('暂不支持删除课程功能')
+// 处理删除
+const handleDelete = (course: Course) => {
+  selectedCourse.value = course
+  deleteDialogVisible.value = true
 }
 
-// 提交表单
-const handleSubmit = async () => {
+// 确认删除
+const confirmDelete = async () => {
+  if (!selectedCourse.value) return
+  
   try {
-    // 表单验证
-    if (!form.value.courseName || !form.value.teacherNO) {
-      ElMessage.warning('请填写完整信息')
-      return
-    }
-
-    if (dialogTitle.value === '添加课程') {
-      // 添加课程
-      await courseApi.addCourse({
-        courseName: form.value.courseName,
-        teacherNO: form.value.teacherNO
-      })
-      ElMessage.success('添加成功')
-    } else {
-      // TODO: 实现编辑课程功能
-      ElMessage.warning('暂不支持编辑课程功能')
-    }
+    isDeleting.value = true
+    const response = await courseApi.deleteCourse(selectedCourse.value.courseNO)
     
-    dialogVisible.value = false
-    loadCourses() // 重新加载课程列表
-  } catch (error) {
-    console.error('操作失败:', error)
-    ElMessage.error('操作失败')
+    if (response === true) {
+      ElMessage.success('删除成功')
+      deleteDialogVisible.value = false
+      loadCourses()
+    } else {
+      throw new Error('删除失败')
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '删除失败')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+// 处理提交
+const handleSubmit = async () => {
+  if (!formRef.value) return
+
+  try {
+    await formRef.value.validate()
+    isSubmitting.value = true
+
+    if (isEdit.value) {
+      // 编辑课程
+      const response = await courseApi.updateCourse({
+        courseNO: courseForm.value.courseNO,
+        courseName: courseForm.value.courseName,
+        teacherNO: courseForm.value.teacherNO
+      })
+      
+      if (response === true) {
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        loadCourses()
+      } else {
+        throw new Error('更新失败')
+      }
+    } else {
+      // 添加课程
+      const response = await courseApi.addCourse({
+        courseName: courseForm.value.courseName,
+        teacherNO: courseForm.value.teacherNO
+      })
+      
+      if (response === true) {
+        ElMessage.success('添加成功')
+        dialogVisible.value = false
+        loadCourses()
+      } else {
+        throw new Error('添加失败')
+      }
+    }
+  } catch (error: any) {
+    ElMessage.error(error.message || '操作失败')
+  } finally {
+    isSubmitting.value = false
   }
 }
 
 onMounted(async () => {
+  // 先加载教师列表，再加载课程列表
   await loadTeachers()
   await loadCourses()
 })
@@ -180,20 +258,44 @@ onMounted(async () => {
 
 <style scoped>
 .course-management {
-  padding: 20px;
+  padding: 24px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .page-header h2 {
   margin: 0;
   font-size: 24px;
-  color: #303133;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.delete-confirm {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.warning-icon {
+  font-size: 48px;
+  color: #f59e0b;
+  margin-bottom: 16px;
+}
+
+.warning-text {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
 :deep(.el-button) {
@@ -202,14 +304,8 @@ onMounted(async () => {
   gap: 4px;
 }
 
-:deep(.el-table) {
-  margin-top: 20px;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-:deep(.el-dialog__body) {
-  padding: 20px 40px;
+:deep(.el-select) {
+  width: 100%;
 }
 
 :deep(.el-form-item:last-child) {
