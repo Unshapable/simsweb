@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simsweb-deployment
+  labels:
+    app: simsweb
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: simsweb
+  template:
+    metadata:
+      labels:
+        app: simsweb
+
+    spec:
+      nodeSelector:
+        role: web
+      containers:
+        - name: simsweb
+          image: simsweb:1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+
+
