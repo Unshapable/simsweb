@@ -4,14 +4,38 @@
     <el-container v-if="showHeader">
       <el-header>
         <div class="header-content">
-          <div class="system-title">
+          <div class="system-title" @click="router.push('/')" role="button">
             <h2>学生信息管理系统</h2>
             <span class="version-tag">{{ versionLabel }}</span>
           </div>
           <div class="user-info">
-            <span>{{ currentUser?.name || '' }}</span>
-            <span class="role-tag" v-if="currentUser">{{ roleLabels[currentUser.role] }}</span>
-            <el-button type="danger" @click="handleLogout">退出登录</el-button>
+            <el-dropdown @command="handleCommand" trigger="click">
+              <div class="user-dropdown-link">
+                <el-icon size="20">
+                  <UserFilled />
+                </el-icon>
+                <span class="username">{{ currentUser?.name || '' }}</span>
+                <el-icon class="arrow-icon">
+                  <ArrowDown />
+                </el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile">
+                    <el-icon><UserFilled /></el-icon>
+                    个人信息
+                  </el-dropdown-item>
+                  <el-dropdown-item command="changePassword">
+                    <el-icon><EditPen /></el-icon>
+                    修改密码
+                  </el-dropdown-item>
+                  <el-dropdown-item divided command="logout">
+                    <el-icon><SwitchButton /></el-icon>
+                    退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
       </el-header>
@@ -22,10 +46,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, provide } from 'vue'
+import { ref, computed, provide, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { userApi, UserRole, type User } from '@/api/user'
+import {
+  Avatar,
+  Key,
+  Close,
+  ArrowDown,
+  UserFilled,
+  EditPen,
+  SwitchButton
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -89,6 +122,28 @@ const handleLogout = async () => {
   }
 }
 
+// 处理下拉菜单命令
+const handleCommand = (command: string) => {
+  switch (command) {
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'changePassword':
+      router.push('/change-password')
+      break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+// 在组件挂载时获取用户信息
+onMounted(async () => {
+  if (route.path !== '/login' && localStorage.getItem('token')) {
+    await getCurrentUser()
+  }
+})
+
 // 提供 getCurrentUser 方法
 provide('getCurrentUser', getCurrentUser)
 </script>
@@ -129,7 +184,62 @@ html, body {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+}
+
+.user-dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  color: #fff;
+}
+
+.user-dropdown-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-dropdown-link .el-icon {
+  font-size: 20px;
+}
+
+.user-dropdown-link .username {
+  font-size: 14px;
+  margin: 0 4px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown-link .arrow-icon {
+  font-size: 12px;
+}
+
+.user-name {
+  font-size: 14px;
+}
+
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+:deep(.el-dropdown-menu__item .el-icon) {
+  font-size: 16px;
+}
+
+:deep(.el-popper.is-light) {
+  border: none;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-dropdown-menu__item--divided:before) {
+  margin: 0;
 }
 
 .role-tag {
@@ -143,6 +253,17 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  user-select: none;
+}
+
+.system-title:hover {
+  opacity: 0.9;
+}
+
+.system-title h2 {
+  margin: 0;
 }
 
 .version-tag {
@@ -150,5 +271,23 @@ html, body {
   background-color: rgba(255, 255, 255, 0.2);
   padding: 2px 8px;
   border-radius: 4px;
+}
+
+.user-dropdown-link .el-icon {
+  font-size: 14px;
+  margin-left: 4px;
+  color: #fff;
+}
+
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+:deep(.el-dropdown-menu__item .el-icon) {
+  font-size: 16px;
+  margin: 0;
 }
 </style> 

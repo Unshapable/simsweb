@@ -1,20 +1,25 @@
 <template>
   <div class="course-management">
-    <h2>课程管理</h2>
-    <div class="actions">
-      <el-button type="primary" @click="showAddCourseDialog">添加课程</el-button>
+    <div class="page-header">
+      <h2>课程管理</h2>
+      <el-button type="primary" @click="showAddCourseDialog">
+        <el-icon><Plus /></el-icon>
+        添加课程
+      </el-button>
     </div>
 
     <el-table :data="courses" border style="width: 100%">
       <el-table-column prop="courseNO" label="课程编号" width="120" />
       <el-table-column prop="courseName" label="课程名称" />
       <el-table-column prop="teacherName" label="任课教师" width="120" />
-      <el-table-column label="操作" width="200">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" @click="handleEdit(row)">
+            <el-icon><Edit /></el-icon>
             编辑
           </el-button>
           <el-button type="danger" size="small" @click="handleDelete(row)">
+            <el-icon><Delete /></el-icon>
             删除
           </el-button>
         </template>
@@ -22,13 +27,17 @@
     </el-table>
 
     <!-- 添加/编辑课程对话框 -->
-    <el-dialog v-model="dialogVisible" :title="dialogTitle">
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="500px">
       <el-form :model="form" label-width="100px">
-        <el-form-item label="课程名称">
-          <el-input v-model="form.courseName" />
+        <el-form-item label="课程名称" required>
+          <el-input v-model="form.courseName" placeholder="请输入课程名称" />
         </el-form-item>
-        <el-form-item label="任课教师">
-          <el-select v-model="form.teacherNO" placeholder="请选择教师">
+        <el-form-item label="任课教师" required>
+          <el-select 
+            v-model="form.teacherNO" 
+            placeholder="请选择教师"
+            style="width: 100%"
+          >
             <el-option
               v-for="teacher in teachers"
               :key="teacher.userNO"
@@ -50,6 +59,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { courseApi, userApi, type Course } from '@/api'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 
 interface Teacher {
   userNO: string
@@ -169,7 +179,40 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.actions {
+.course-management {
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #303133;
+}
+
+:deep(.el-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.el-table) {
+  margin-top: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+:deep(.el-dialog__body) {
+  padding: 20px 40px;
+}
+
+:deep(.el-form-item:last-child) {
+  margin-bottom: 0;
 }
 </style> 

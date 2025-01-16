@@ -38,7 +38,10 @@ export const userApi = {
     // 登出
     logout: () =>
         request<boolean>('/api/user/logout', {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'token': localStorage.getItem('token') || ''
+            }
         }),
 
     // 获取当前用户信息
