@@ -289,6 +289,7 @@ const handleSubmit = async () => {
     } else {
       await userApi.register(userForm.value as User)
       ElMessage.success('添加成功')
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
     dialogVisible.value = false

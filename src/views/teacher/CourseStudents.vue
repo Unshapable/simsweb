@@ -197,6 +197,7 @@ const handleSetScore = async (student: Student) => {
   try {
     await courseApi.setScore(currentCourseNO.value, student.userNO, student.score)
     ElMessage.success('成绩提交成功')
+    await new Promise(resolve => setTimeout(resolve, 500))
     // 重新加载学生列表和成绩
     await loadStudents()
   } catch (error) {

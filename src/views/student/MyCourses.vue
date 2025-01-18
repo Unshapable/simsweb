@@ -107,6 +107,7 @@ const handleDrop = async (course: SelectedCourse) => {
     })
     await courseApi.cancelCourse(course.courseNO)
     ElMessage.success('退课成功')
+    await new Promise(resolve => setTimeout(resolve, 500))
     loadMyCourses()
   } catch (error) {
     if (error !== 'cancel') {
